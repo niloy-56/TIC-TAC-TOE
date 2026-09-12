@@ -1,12 +1,11 @@
+const boardElement = document.querySelector(".board");
 const cells = document.querySelectorAll(".cell");
 const statusText = document.getElementById("status");
 const restartButton = document.getElementById("restart");
 
-let board = ["", "", "", "", "", "", "", ""];
-
+let board = ["", "", "", "", "", "", "", "", ""];
 let currentPlayer = "X";
-
-let gameRunning = true;
+let gameOver = false;
 
 
 // Winning combinations
@@ -24,34 +23,58 @@ const winningConditions = [
 ];
 
 
-// Cell click
-cells.forEach(cell => {
+// ==========================
+// CELL CLICK
+// ==========================
 
-  cell.addEventListener("click", function () {
+boardElement.addEventListener("click", function (event) {
 
-    const index = this.dataset.index;
+  // Find the clicked cell
+  const cell = event.target.closest(".cell");
 
-    if (board[index] !== "" || !gameRunning) {
-      return;
-    }
+  // If something other than a cell was clicked
+  if (!cell) {
+    return;
+  }
 
-    board[index] = currentPlayer;
+  // Get cell number
+  const index = parseInt(cell.dataset.index);
 
-    this.textContent = currentPlayer;
+  // Check index
+  if (isNaN(index)) {
+    return;
+  }
 
-    this.classList.add(currentPlayer.toLowerCase());
+  // Don't allow occupied cells
+  if (board[index] !== "") {
+    return;
+  }
 
-    checkWinner();
+  // Don't allow moves after game ends
+  if (gameOver) {
+    return;
+  }
 
-  });
+
+  // Put X or O
+  board[index] = currentPlayer;
+
+  cell.textContent = currentPlayer;
+
+  cell.classList.add(currentPlayer.toLowerCase());
+
+
+  // Check winner
+  checkWinner();
 
 });
 
 
-// Check winner
-function checkWinner() {
+// ==========================
+// CHECK WINNER
+// ==========================
 
-  let winnerFound = false;
+function checkWinner() {
 
   for (let condition of winningConditions) {
 
@@ -59,68 +82,75 @@ function checkWinner() {
     const b = condition[1];
     const c = condition[2];
 
+
     if (
       board[a] !== "" &&
       board[a] === board[b] &&
       board[a] === board[c]
     ) {
 
-      winnerFound = true;
-
       cells[a].classList.add("winner");
       cells[b].classList.add("winner");
       cells[c].classList.add("winner");
 
-      break;
+
+      statusText.textContent =
+        "Player " + currentPlayer + " Wins! 🎉";
+
+
+      gameOver = true;
+
+      return;
     }
   }
 
 
-  if (winnerFound) {
-
-    statusText.textContent =
-      `Player ${currentPlayer} Wins! 🎉`;
-
-    gameRunning = false;
-
-    return;
-  }
-
-
-  // Draw
+  // Check draw
   if (!board.includes("")) {
 
     statusText.textContent = "It's a Draw! 🤝";
 
-    gameRunning = false;
+    gameOver = true;
 
     return;
   }
 
 
   // Change player
-  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  if (currentPlayer === "X") {
+    currentPlayer = "O";
+  } else {
+    currentPlayer = "X";
+  }
+
 
   statusText.textContent =
-    `Player ${currentPlayer}'s Turn`;
+    "Player " + currentPlayer + "'s Turn";
 }
 
 
-// Restart game
-restartButton.addEventListener("click", restartGame);
+// ==========================
+// RESTART GAME
+// ==========================
 
+restartButton.addEventListener("click", function () {
 
-function restartGame() {
-
+  // Empty board
   board = ["", "", "", "", "", "", "", ""];
 
+  // Player X starts
   currentPlayer = "X";
 
-  gameRunning = true;
+  // Game active
+  gameOver = false;
 
+
+  // Reset status
   statusText.textContent = "Player X's Turn";
 
-  cells.forEach(cell => {
+
+  // Clear all cells
+  cells.forEach(function (cell) {
 
     cell.textContent = "";
 
@@ -130,4 +160,4 @@ function restartGame() {
 
   });
 
-}
+});
